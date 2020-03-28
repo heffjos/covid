@@ -18,10 +18,10 @@ library(broom)
 
 theme_set(theme_ft_rc(plot_title_size = 24,
                       subtitle_size = 18,
-                      axis_text_size = 14) +
+                      axis_text_size = 16) +
           theme(text = element_text(size = 20),
-                axis.title.x = element_text(size = 12),
-                axis.title.y = element_text(size = 12)))
+                axis.title.x = element_text(size = 14),
+                axis.title.y = element_text(size = 14)))
 ```
 
 ```{r}
@@ -50,7 +50,7 @@ p_00_state <- state_data %>%
 
 ```{r}
 p_01_state <- state_data %>%
-  filter(state %in% of_interest) %>%
+  filter(state %in% of_interest, confirmed > 0) %>%
   mutate(state = fct_reorder(state, confirmed, max, .desc = TRUE)) %>%
   group_by(state) %>%
   mutate(n = as.integer(1:n())) %>%
@@ -118,9 +118,9 @@ p_02_state <- state_data %>%
   ggplot(aes(x = n, y = confirmed)) +
   geom_line(data = doubling_lines, aes(group = days_to_double), linetype = "dashed") +
   geom_line(aes(color = state)) +
-  geom_text(data = doubling_text, aes(x = x, y = y, label = text), inherit.aes = FALSE, nudge_x = -0.5) +
+  geom_text(data = doubling_text, aes(x = x, y = y, label = text), inherit.aes = FALSE, nudge_x = -0.5, size = 5) +
   scale_color_hue() +
-  labs(title = "Number of confirmed cases for selected states beginning when data is available",
+  labs(title = "Log plot of confirmed cases beginning at 10 cases",
        subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
        y = "Confirmed Cases",
        x = "day",
@@ -148,7 +148,7 @@ p_03_state <- state_data %>%
 
 
 ```{r}
-p_04_state <- p_all_state_data <- state_data %>%
+p_all_state_data <- state_data %>%
   ggplot(aes(x = n, y = confirmed.log, color = state)) +
   geom_line() +
   scale_x_continuous(breaks = pretty_breaks()) +
@@ -156,7 +156,7 @@ p_04_state <- p_all_state_data <- state_data %>%
        x = "day",
        title = "Interactive")
 
-style(ggplotly(p_all_state_data), visible="legendonly", traces = 1:50)
+p_04_state <- style(ggplotly(p_all_state_data), visible="legendonly", traces = 1:50)
 # ggplotly(p_all_state_data, visible = "legendonly", mode = "markers")
 ```
 
@@ -212,12 +212,27 @@ p_06_state <- state_model_data %>%
 ```{r}
 p_07_state <- state_data %>%
   mutate(norm_deaths = deaths / (confirmed / 100)) %>%
-  filter(date == (today() -1), norm_deaths > 0) %>%
+  group_by(state) %>%
+  filter(date == last(date), norm_deaths > 0) %>%
+  ungroup() %>%
   mutate(state = fct_reorder(state, norm_deaths, median)) %>%
   ggplot(aes(y = state, x = norm_deaths)) +
   geom_point(color = ft_cols$yellow) +
   labs(title = "US state deaths per 100 confirmed cases",
        subtitle = "Only states with confirmed deaths are shown",
        captions = "Src: git@github.com:CSSEGISandData/COVID-19.git",
-       x = NULL)
+       x = NULL) +
+  theme(axis.text.y = element_text(size = 14))
 ```
+
+```{r, purl=FALSE}
+p_00_state
+p_01_state
+p_02_state
+p_03_state
+p_04_state
+p_05_state
+p_06_state
+p_07_state
+```
+

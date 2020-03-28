@@ -10,10 +10,10 @@ library(ggrepel)
 
 theme_set(theme_ft_rc(plot_title_size = 24,
                       subtitle_size = 18,
-                      axis_text_size = 14) +
+                      axis_text_size = 16) +
           theme(text = element_text(size = 20),
-                axis.title.x = element_text(size = 12),
-                axis.title.y = element_text(size = 12)))
+                axis.title.x = element_text(size = 14),
+                axis.title.y = element_text(size = 14)))
 
 
 ## ------------------------------------------------------------------------
@@ -80,10 +80,10 @@ doubling_text <- doubling_lines %>%
 p_00_country <- confirmed_data %>%
   ggplot(aes(x = n, y = confirmed, color = country)) +
   geom_line(data = doubling_lines, aes(x = n , y = confirmed, group = days_to_double), linetype = "dashed", inherit.aes = FALSE) +
-  geom_text(data = doubling_text, aes(x = x, y = y, label = text), inherit.aes = FALSE, nudge_x = -0.5) +
+  geom_text(data = doubling_text, aes(x = x, y = y, label = text), inherit.aes = FALSE, nudge_x = -0.5, size = 5) +
   geom_point(data = point_data) +
   geom_line() +
-  geom_text_repel(data = point_data, aes(label = country)) +
+  geom_text_repel(data = point_data, aes(label = country), size = 7, vjust = 1, hjust = 1) +
   labs(x = "day",
        y = "Confirmed Cases",
        color = "",
@@ -139,7 +139,6 @@ p_02_country <- country_models %>%
   ggplot(aes(y = country, x = estimate.scale)) +
   geom_errorbarh(aes(xmin = conf.low.scale, xmax = conf.high.scale, height = 0.3)) +
   geom_point(color = ft_cols$yellow) +
-  theme(axis.text.y = element_text(size = 10)) +
   labs(title = "Estimated days between doubling of confirmed cases",
        subtitle = "Only confirmed cases in the past week were modeled",
        x = "days") +
@@ -210,10 +209,10 @@ p_03_country <- deaths_data %>%
   geom_point(data = deaths_point_data, aes(color = country)) +
   geom_line(data = doubling_lines, aes(group = days_to_double), linetype = "dashed") +
   geom_line(aes(color = country)) +
-  geom_text(data = doubling_text, aes(x = x, y = y, label = text), inherit.aes = FALSE, nudge_x = -0.5) +
-  geom_text_repel(data = deaths_point_data, aes(label = country, color = country)) +
+  geom_text(data = doubling_text, aes(x = x, y = y, label = text), inherit.aes = FALSE, nudge_x = -0.5, size = 5) +
+  geom_text_repel(data = deaths_point_data, aes(label = country, color = country), size = 7, vjust = 1, hjust = 1) +
   scale_color_hue() +
-  labs(title = "Number of deaths cases for selected states beginning when data is available",
+  labs(title = "Country deaths beginning at 10 deaths",
        subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
        y = "deaths Cases",
        x = "day",

@@ -83,32 +83,32 @@ data <- tibble(reports = dir(data_dir, ".*\\.csv", full.names = TRUE))
 
 data <- data %>%
   mutate(data = map(reports, read_data)) %>%
-  unnest(data)
+  unnest(data) %>%
+  mutate(date = str_extract(basename(reports), "[:digit:]{2}-[:digit:]{2}-[:digit:]{4}") %>% mdy())
 
-data <- data %>%
-  mutate(update = case_when(update == ymd_hms("2020-03-11 20:00:00") ~ update + days(2), 
-                            TRUE ~ update),
-         date_only = as_date(update)) %>%
-  group_by(province_state, date_only) %>%
-  summarize(confrimed = sum(confirmed), deaths = sum(deaths), recovered = sum(recovered)) %>%
-  ungroup()
+summarized_data <- data %>%
+  group_by(province_state, date) %>%
+  summarize(confirmed = sum(confirmed), deaths = sum(deaths), recovered = sum(recovered)) %>%
+  ungroup() %>%
+  mutate(confirmed.log = log10(confirmed), deaths.log = log10(deaths), recovered = log10(recovered))
 
-state_data <- data %>% 
-  filter(province_state %in% state.name)
+state_data <- summarized_data %>%
+  rename(state = province_state) %>%
+  filter(state %in% state.name, date >= ymd("2020-03-10"))
 
-write_csv(state_data, "./data/state_date.csv")
-write_csv(data, "./data/all_daily_reports.csv")
+write_csv(state_data, "./data/state_data.csv")
+write_csv(summarized_data, "./data/all_daily_reports.csv")
 
 
 ## ------------------------------------------------------------------------
 read_global_data <- function(fname) {
   data <- read_csv(fname) %>%
     rename(province_state = `Province/State`,
-           country_region = `Country/Region`) %>%
+           country = `Country/Region`) %>%
     select(-Lat, -Long) %>%
-    pivot_longer(c(-province_state, -country_region), names_to = "date") %>%
+    pivot_longer(c(-province_state, -country), names_to = "date") %>%
     mutate(date = mdy(date)) %>%
-    group_by(country_region, date) %>%
+    group_by(country, date) %>%
     summarize(value = sum(value))
 }
 
@@ -124,7 +124,8 @@ global_deaths <- read_global_data("../COVID-19/csse_covid_19_data/csse_covid_19_
 
 global_data <- global_confirmed %>%
   left_join(global_recovered) %>%
-  left_join(global_deaths)
+  left_join(global_deaths) %>%
+  mutate(confirmed.log = log10(confirmed), recovered.log = log10(recovered), deaths.log = log10(deaths))
 
 write_csv(global_data, "./data/global_data.csv")
 
