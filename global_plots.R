@@ -93,8 +93,9 @@ p_00_country <- confirmed_data %>%
   labs(x = "day",
        y = "Confirmed Cases",
        color = "",
-       title = "Number of confirmed cases in selected countries\nstarting when number of cases = 100", 
-       subtitle = "Source: https://github.com/CSSEGISandData/COVID-19") +
+       title = "Confirmed cases for selected countries",
+       subtitle = "Date begins when cases >= 10",
+       caption = "Source: https://github.com/CSSEGISandData/COVID-19") +
   scale_y_log10() +
   theme(legend.position = "none")
   
@@ -221,7 +222,7 @@ p_03_country <- deaths_data %>%
   geom_text_repel(data = deaths_point_data, aes(label = country, color = country), size = 7, vjust = 1, hjust = 1) +
   scale_color_hue() +
   labs(title = "Country deaths beginning at 10 deaths",
-       subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
+       caption = "Source: https://github.com/CSSEGISandData/COVID-19",
        y = "deaths Cases",
        x = "day",
        color = "") +

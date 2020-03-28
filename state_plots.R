@@ -42,7 +42,7 @@ p_00_state <- of_interest_data %>%
   geom_text_repel(data = of_interest_points, aes(label = state), size = 7, hjust = 1, vjust = 1) +
   scale_color_hue() +
   labs(title = "Number of confirmed cases for selected states",
-       subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
+       caption = "Source: https://github.com/CSSEGISandData/COVID-19",
        y = "Confirmed Cases",
        x = "",
        color = "") +
@@ -68,8 +68,8 @@ p_01_state <- tmp %>%
   geom_line() +
   geom_point(data = of_interest_points) +
   scale_color_hue() +
-  labs(title = "Number of confirmed cases for selected states beginning when data is available",
-       subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
+  labs(title = "Confirmed cases for selected states beginning when data is available",
+       caption = "Source: https://github.com/CSSEGISandData/COVID-19",
        y = "Confirmed Cases",
        x = "day",
        color = "") +
@@ -143,7 +143,7 @@ p_02_state <- tmp %>%
   geom_point(data = of_interest_points, aes(color = state)) +
   scale_color_hue() +
   labs(title = "Log plot of confirmed cases beginning at 10 cases",
-       subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
+       caption = "Source: https://github.com/CSSEGISandData/COVID-19",
        y = "Confirmed Cases",
        x = "day",
        color = "") +
@@ -173,7 +173,7 @@ p_03_state <- tmp %>%
   geom_point(data = tmp_points) +
   scale_color_hue() +
   labs(title = "Number of deaths",
-       subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
+       caption = "Source: https://github.com/CSSEGISandData/COVID-19",
        y = "Deaths",
        x = "day",
        color = "") +
@@ -225,7 +225,7 @@ p_05_state <- state_models %>%
   geom_point(color = ft_cols$yellow) +
   theme(axis.text.y = element_text(size = 10)) +
   labs(title = "Estimated days between doubling of confirmed cases",
-       subtitle = "Only confirmed cases in the past week were modeled",
+       subtitle = "Only confirmed cases in the past week are modeled",
        x = "days") +
   scale_x_continuous(breaks = 2^(1/seq(1, 6)), minor_breaks = NULL, labels = seq(1, 6))
 
