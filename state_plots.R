@@ -1,0 +1,209 @@
+## ------------------------------------------------------------------------
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(hrbrthemes)
+library(plotly)
+library(datasets)
+library(broom)
+
+theme_set(theme_ft_rc(plot_title_size = 24,
+                      subtitle_size = 18,
+                      axis_text_size = 14) +
+          theme(text = element_text(size = 20),
+                axis.title.x = element_text(size = 12),
+                axis.title.y = element_text(size = 12)))
+
+
+## ------------------------------------------------------------------------
+state_data <- read_csv("./data/state_data.csv") %>%
+  group_by(state) %>%
+  mutate(n = 0:(n() - 1)) %>%
+  ungroup()
+
+
+## ------------------------------------------------------------------------
+of_interest <- c("Wisconsin", "Illinois", "North Dakota", "Hawaii", "Michigan", "Minnesota")
+
+p_00_state <- state_data %>%
+  filter(state %in% of_interest) %>%
+  mutate(state = fct_reorder(state, confirmed, max, .desc = TRUE)) %>%
+  ggplot(aes(x = date, y = confirmed, color = state)) +
+  geom_line() +
+  scale_color_hue() +
+  labs(title = "Number of confirmed cases for selected states",
+       subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
+       y = "Confirmed Cases",
+       x = "",
+       color = "")
+
+
+## ------------------------------------------------------------------------
+p_01_state <- state_data %>%
+  filter(state %in% of_interest) %>%
+  mutate(state = fct_reorder(state, confirmed, max, .desc = TRUE)) %>%
+  group_by(state) %>%
+  mutate(n = as.integer(1:n())) %>%
+  ggplot(aes(x = n, y = confirmed, color = state)) +
+  geom_line() +
+  scale_color_hue() +
+  labs(title = "Number of confirmed cases for selected states beginning when data is available",
+       subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
+       y = "Confirmed Cases",
+       x = "day",
+       color = "") +
+  scale_x_continuous(breaks = pretty_breaks())
+
+
+## ------------------------------------------------------------------------
+state_summaries <- state_data %>%
+  filter(state %in% of_interest, confirmed >= 10) %>%
+  group_by(state) %>%
+  summarize(max_confirmed = max(confirmed),
+            max_n = n() - first(n),
+            init = min(confirmed)) %>%
+  ungroup() %>%
+  summarize(max_confirmed = max(max_confirmed),
+            max_n = max(max_n),
+            init = mean(init))
+
+max_confirmed <- state_summaries$max_confirmed
+max_n <- state_summaries$max_n
+
+doubling_days <- seq(1, 4)
+
+samples_to_max <- ceiling(log(max_confirmed, 2^(1/doubling_days)))
+
+doubling_lines <- tibble(
+  days_to_double = unlist(map2(doubling_days, samples_to_max, rep)),
+)
+
+doubling_lines <- doubling_lines %>%
+  group_by(days_to_double) %>%
+  mutate(n = seq(0, n() - 1)) %>%
+  ungroup() %>%
+  mutate(confirmed = 10 * 2^(1/days_to_double * n)) %>%
+  filter(confirmed <= 2 * max_confirmed) %>%
+  group_by(days_to_double) %>%
+  mutate(n = seq(0, n() - 1)) %>%
+  ungroup() %>%
+  filter(n <= max_n)
+
+doubling_text <- doubling_lines %>%
+  group_by(days_to_double) %>%
+  summarize(x = last(n),
+            y = last(confirmed)) %>%
+  mutate(text = c("Cases double\nevery day",
+                  "..every\n2 days",
+                  "..every\n3 days",
+                  "..every\n4 days"))
+
+
+## ------------------------------------------------------------------------
+p_02_state <- state_data %>%
+  filter(state %in% of_interest, confirmed >= 10) %>%
+  mutate(state = fct_reorder(state, confirmed, max, .desc = TRUE)) %>%
+  group_by(state) %>%
+  mutate(n = seq(0, n() - 1)) %>%
+  ggplot(aes(x = n, y = confirmed)) +
+  geom_line(data = doubling_lines, aes(group = days_to_double), linetype = "dashed") +
+  geom_line(aes(color = state)) +
+  geom_text(data = doubling_text, aes(x = x, y = y, label = text), inherit.aes = FALSE, nudge_x = -0.5) +
+  scale_color_hue() +
+  labs(title = "Number of confirmed cases for selected states beginning when data is available",
+       subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
+       y = "Confirmed Cases",
+       x = "day",
+       color = "") +
+  scale_x_continuous(breaks = pretty_breaks()) +
+  scale_y_log10()
+
+
+## ------------------------------------------------------------------------
+p_03_state <- state_data %>%
+  filter(state %in% c(of_interest, "New York", "Washingtion", "Florida"), deaths > 0) %>%
+  mutate(state = fct_reorder(state, deaths, max, .desc = TRUE)) %>%
+  group_by(state) %>%
+  mutate(n = seq(0, n() - 1)) %>%
+  ggplot(aes(x = n, y = deaths, color = state)) +
+  geom_line() +
+  scale_color_hue() +
+  labs(title = "Number of deaths",
+       subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
+       y = "Deaths",
+       x = "day",
+       color = "") +
+  scale_x_continuous(breaks = pretty_breaks())
+
+
+## ------------------------------------------------------------------------
+p_04_state <- p_all_state_data <- state_data %>%
+  ggplot(aes(x = n, y = confirmed.log, color = state)) +
+  geom_line() +
+  scale_x_continuous(breaks = pretty_breaks()) +
+  labs(y = "log10 confirmed cases",
+       x = "day",
+       title = "Interactive")
+
+style(ggplotly(p_all_state_data), visible="legendonly", traces = 1:50)
+# ggplotly(p_all_state_data, visible = "legendonly", mode = "markers")
+
+
+## ------------------------------------------------------------------------
+state_model_data <- state_data %>%
+  filter(confirmed != 0) %>%
+  select(state, n, confirmed.log, confirmed) %>%
+  group_by(state) %>%
+  filter(n >= last(n) -7) %>%
+  mutate(n = seq(0, (n() - 1))) %>%
+  ungroup()
+
+
+## ------------------------------------------------------------------------
+state_models <- state_model_data %>%
+  group_by(state) %>%
+  summarize(lm_mod = list(lm(confirmed.log ~ n))) %>%
+  mutate(tidied = map(lm_mod, tidy, conf.int = TRUE)) %>%
+  unnest(tidied) %>%
+  filter(term != "(Intercept)") %>%
+  mutate(state = fct_reorder(state, estimate, max),
+         estimate.scale = 10^(estimate),
+         conf.low.scale = 10^(conf.low),
+         conf.high.scale = 10^(conf.high),
+         conf.high.scale = ifelse(conf.high.scale > 2.5, 2.5, conf.high.scale))
+
+p_05_state <- state_models %>%
+  ggplot(aes(y = state, x = estimate.scale)) +
+  geom_errorbarh(aes(xmin = conf.low.scale, xmax = conf.high.scale, height = 0.3)) +
+  geom_point(color = ft_cols$yellow) +
+  theme(axis.text.y = element_text(size = 10)) +
+  labs(title = "Estimated days between doubling of confirmed cases",
+       subtitle = "Only confirmed cases in the past week were modeled",
+       x = "days") +
+  scale_x_continuous(breaks = 2^(1/seq(1, 6)), minor_breaks = NULL, labels = seq(1, 6))
+
+
+## ------------------------------------------------------------------------
+p_06_state <- state_model_data %>%
+  mutate(state = factor(state, levels = levels(state_models$state), ordered = TRUE)) %>%
+  ggplot(aes(x = n , y = confirmed)) +
+  geom_point(color = ft_cols$yellow) +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ state) +
+  scale_y_log10() +
+  scale_x_continuous(breaks = pretty_breaks()) +
+  theme_ft_rc()
+
+
+## ------------------------------------------------------------------------
+p_07_state <- state_data %>%
+  mutate(norm_deaths = deaths / (confirmed / 100)) %>%
+  filter(date == (today() -1), norm_deaths > 0) %>%
+  mutate(state = fct_reorder(state, norm_deaths, median)) %>%
+  ggplot(aes(y = state, x = norm_deaths)) +
+  geom_point(color = ft_cols$yellow) +
+  labs(title = "US state deaths per 100 confirmed cases",
+       subtitle = "Only states with confirmed deaths are shown",
+       captions = "Src: git@github.com:CSSEGISandData/COVID-19.git",
+       x = NULL)
+
