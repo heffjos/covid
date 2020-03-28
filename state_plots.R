@@ -6,6 +6,7 @@ library(hrbrthemes)
 library(plotly)
 library(datasets)
 library(broom)
+library(ggrepel)
 
 theme_set(theme_ft_rc(plot_title_size = 24,
                       subtitle_size = 18,
@@ -25,39 +26,62 @@ state_data <- read_csv("./data/state_data.csv") %>%
 ## ------------------------------------------------------------------------
 of_interest <- c("Wisconsin", "Illinois", "North Dakota", "Hawaii", "Michigan", "Minnesota")
 
-p_00_state <- state_data %>%
+of_interest_data <- state_data %>%
   filter(state %in% of_interest) %>%
-  mutate(state = fct_reorder(state, confirmed, max, .desc = TRUE)) %>%
+  mutate(state = fct_reorder(state, confirmed, max, .desc = TRUE))
+
+of_interest_points <- of_interest_data %>%
+  group_by(state) %>%
+  filter(confirmed == max(confirmed)) %>%
+  ungroup()
+
+p_00_state <- of_interest_data %>%
   ggplot(aes(x = date, y = confirmed, color = state)) +
   geom_line() +
+  geom_point(data = of_interest_points) +
+  geom_text_repel(data = of_interest_points, aes(label = state), size = 7, hjust = 1, vjust = 1) +
   scale_color_hue() +
   labs(title = "Number of confirmed cases for selected states",
        subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
        y = "Confirmed Cases",
        x = "",
-       color = "")
+       color = "") +
+  theme(legend.position = "None")
+
+
 
 
 ## ------------------------------------------------------------------------
-p_01_state <- state_data %>%
-  filter(state %in% of_interest, confirmed > 0) %>%
-  mutate(state = fct_reorder(state, confirmed, max, .desc = TRUE)) %>%
+tmp <- of_interest_data %>%
+  filter(confirmed > 0) %>%
   group_by(state) %>%
-  mutate(n = as.integer(1:n())) %>%
+  mutate(n = seq(0, n() - 1))
+
+of_interest_points <- tmp %>%
+  group_by(state) %>%
+  filter(confirmed == max(confirmed)) %>%
+  ungroup()
+
+p_01_state <- tmp %>%
   ggplot(aes(x = n, y = confirmed, color = state)) +
+  geom_text_repel(data = of_interest_points, aes(label = state), size = 7, hjust = 1, vjust = 1) +
   geom_line() +
+  geom_point(data = of_interest_points) +
   scale_color_hue() +
   labs(title = "Number of confirmed cases for selected states beginning when data is available",
        subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
        y = "Confirmed Cases",
        x = "day",
        color = "") +
-  scale_x_continuous(breaks = pretty_breaks())
+  scale_x_continuous(breaks = pretty_breaks()) +
+  theme(legend.position = "None")
+
+
 
 
 ## ------------------------------------------------------------------------
-state_summaries <- state_data %>%
-  filter(state %in% of_interest, confirmed >= 10) %>%
+state_summaries <- of_interest_data %>%
+  filter(confirmed >= 10) %>%
   group_by(state) %>%
   summarize(max_confirmed = max(confirmed),
             max_n = n() - first(n),
@@ -100,15 +124,23 @@ doubling_text <- doubling_lines %>%
 
 
 ## ------------------------------------------------------------------------
-p_02_state <- state_data %>%
-  filter(state %in% of_interest, confirmed >= 10) %>%
-  mutate(state = fct_reorder(state, confirmed, max, .desc = TRUE)) %>%
+tmp <- of_interest_data %>%
+  filter(confirmed > 10) %>%
   group_by(state) %>%
-  mutate(n = seq(0, n() - 1)) %>%
+  mutate(n = seq(0, n() - 1))
+
+of_interest_points <- tmp %>%
+  group_by(state) %>%
+  filter(confirmed == max(confirmed)) %>%
+  ungroup()
+
+p_02_state <- tmp %>%
   ggplot(aes(x = n, y = confirmed)) +
+  geom_text_repel(data = of_interest_points, aes(label = state, color = state), size = 7, hjust = 1, vjust = 1) +
   geom_line(data = doubling_lines, aes(group = days_to_double), linetype = "dashed") +
   geom_line(aes(color = state)) +
   geom_text(data = doubling_text, aes(x = x, y = y, label = text), inherit.aes = FALSE, nudge_x = -0.5, size = 5) +
+  geom_point(data = of_interest_points, aes(color = state)) +
   scale_color_hue() +
   labs(title = "Log plot of confirmed cases beginning at 10 cases",
        subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
@@ -116,24 +148,39 @@ p_02_state <- state_data %>%
        x = "day",
        color = "") +
   scale_x_continuous(breaks = pretty_breaks()) +
-  scale_y_log10()
+  scale_y_log10() +
+  theme(legend.position = "None")
+
+
 
 
 ## ------------------------------------------------------------------------
-p_03_state <- state_data %>%
-  filter(state %in% c(of_interest, "New York", "Washingtion", "Florida"), deaths > 0) %>%
+tmp <- state_data %>%
+  filter(state %in% c(of_interest, "New York", "Washington", "Florida"), deaths >= 0) %>%
   mutate(state = fct_reorder(state, deaths, max, .desc = TRUE)) %>%
   group_by(state) %>%
-  mutate(n = seq(0, n() - 1)) %>%
+  mutate(n = seq(0, n() - 1))
+
+tmp_points <- tmp %>%
+  group_by(state) %>%
+  filter(confirmed == max(confirmed)) %>%
+  ungroup()
+
+p_03_state <- tmp %>%
   ggplot(aes(x = n, y = deaths, color = state)) +
+  geom_text_repel(data = tmp_points, aes(label = state), size = 7, hjust = 1, vjust = 1) +
   geom_line() +
+  geom_point(data = tmp_points) +
   scale_color_hue() +
   labs(title = "Number of deaths",
        subtitle = "Source: https://github.com/CSSEGISandData/COVID-19",
        y = "Deaths",
        x = "day",
        color = "") +
-  scale_x_continuous(breaks = pretty_breaks())
+  scale_x_continuous(breaks = pretty_breaks()) +
+  theme(legend.position = "None")
+
+
 
 
 ## ------------------------------------------------------------------------
@@ -183,16 +230,6 @@ p_05_state <- state_models %>%
   scale_x_continuous(breaks = 2^(1/seq(1, 6)), minor_breaks = NULL, labels = seq(1, 6))
 
 
-## ------------------------------------------------------------------------
-p_06_state <- state_model_data %>%
-  mutate(state = factor(state, levels = levels(state_models$state), ordered = TRUE)) %>%
-  ggplot(aes(x = n , y = confirmed)) +
-  geom_point(color = ft_cols$yellow) +
-  geom_smooth(method = "lm") +
-  facet_wrap(~ state) +
-  scale_y_log10() +
-  scale_x_continuous(breaks = pretty_breaks()) +
-  theme_ft_rc()
 
 
 ## ------------------------------------------------------------------------

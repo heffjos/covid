@@ -17,14 +17,20 @@ theme_set(theme_ft_rc(plot_title_size = 24,
 
 
 ## ------------------------------------------------------------------------
-global_data <- read_csv("./data/global_data.csv")
+global_data <- read_csv("./data/global_data.csv") %>%
+  mutate(country = case_when(country == "Korea, South" ~ "S Korea",
+                             country == "United Kingdom" ~ "UK",
+                             TRUE ~ country))
+
+countries <- c("S Korea", "Italy", "US", "UK", "Canada", "Mexico", "France", "India", "Colombia", "China")
+
+countries_data <- global_data %>%
+  filter(country %in% countries)
 
 
 ## ------------------------------------------------------------------------
-countries <- c("Korea, South", "Italy", "US", "United Kingdom", "Canada", "Mexico", "France", "India", "Colombia", "China")
-
-confirmed_data <- global_data %>%
-  filter(confirmed > 10, country %in% countries) %>%
+confirmed_data <- countries_data %>%
+  filter(confirmed > 10) %>%
   group_by(country) %>%
   mutate(n = seq(0, n() - 1)) %>%
   ungroup() %>%
@@ -94,12 +100,15 @@ p_00_country <- confirmed_data %>%
   
 
 
+
+
 ## ------------------------------------------------------------------------
-p_01_country <- global_data %>%
+p_01_country <- countries_data %>%
   arrange(country, date) %>%
+  group_by(country) %>%
   filter(date == last(date)) %>%
+  ungroup() %>%
   mutate(norm_deaths = deaths / (confirmed / 100)) %>%
-  filter(country %in% countries) %>%
   mutate(country = fct_reorder(country, norm_deaths, median)) %>%
   ggplot(aes(y = country, x = norm_deaths)) +
   geom_point(color = ft_cols$yellow) +
@@ -110,8 +119,10 @@ p_01_country <- global_data %>%
        x = NULL)
 
 
+
+
 ## ------------------------------------------------------------------------
-country_model_data <- global_data %>%
+country_model_data <- countries_data %>%
   filter(confirmed != 0) %>%
   group_by(country) %>%
   mutate(n = 1:n()) %>%
@@ -145,13 +156,10 @@ p_02_country <- country_models %>%
   scale_x_continuous(breaks = 2^(1/seq(1, 9)), minor_breaks = NULL, labels = seq(1, 9))
 
 
-## ------------------------------------------------------------------------
-countries <- c("South Korea", "Italy", "US", "UK", "Canada", "Mexico", "France", "India", "Colombia", "China")
 
-deaths_data <- global_data %>%
-  mutate(country = case_when(country == "United Kingdom" ~ "UK",
-                             country == "Korea, South" ~ "South Korea",
-                             TRUE ~ country)) %>%
+
+## ------------------------------------------------------------------------
+deaths_data <- countries_data %>%
   filter(deaths > 10, country %in% countries) %>%
   group_by(country) %>%
   mutate(n = seq(0, n() - 1)) %>%
