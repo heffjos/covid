@@ -32,7 +32,7 @@ of_interest_data <- state_data %>%
 
 of_interest_points <- of_interest_data %>%
   group_by(state) %>%
-  filter(confirmed == max(confirmed)) %>%
+  filter(n == max(n)) %>%
   ungroup()
 
 p_00_state <- of_interest_data %>%
@@ -59,7 +59,7 @@ tmp <- of_interest_data %>%
 
 of_interest_points <- tmp %>%
   group_by(state) %>%
-  filter(confirmed == max(confirmed)) %>%
+  filter(n == max(n)) %>%
   ungroup()
 
 p_01_state <- tmp %>%
@@ -131,7 +131,7 @@ tmp <- of_interest_data %>%
 
 of_interest_points <- tmp %>%
   group_by(state) %>%
-  filter(confirmed == max(confirmed)) %>%
+  filter(n == max(n)) %>%
   ungroup()
 
 p_02_state <- tmp %>%
@@ -163,7 +163,7 @@ tmp <- state_data %>%
 
 tmp_points <- tmp %>%
   group_by(state) %>%
-  filter(confirmed == max(confirmed)) %>%
+  filter(n == max(n)) %>%
   ungroup()
 
 p_03_state <- tmp %>%
