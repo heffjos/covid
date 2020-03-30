@@ -10,14 +10,15 @@ library(ggrepel)
 
 theme_set(theme_ft_rc(plot_title_size = 24,
                       subtitle_size = 18,
-                      axis_text_size = 16) +
+                      axis_text_size = 16,
+                      caption_size = 12) +
           theme(text = element_text(size = 20),
                 axis.title.x = element_text(size = 14),
                 axis.title.y = element_text(size = 14)))
 
 
 ## ------------------------------------------------------------------------
-global_data <- read_csv("./data/global_data.csv") %>%
+global_data <- read_csv("./scripts/data/global_data.csv") %>%
   mutate(country = case_when(country == "Korea, South" ~ "S Korea",
                              country == "United Kingdom" ~ "UK",
                              TRUE ~ country))

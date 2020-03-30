@@ -21,7 +21,7 @@ theme_set(theme_ft_rc(plot_title_size = 24,
 
 
 ## ------------------------------------------------------------------------
-county_data <- read_csv("../nytimes-data/us-counties.csv")
+county_data <- read_csv("./nytimes-data/us-counties.csv")
 
 selected_county_data <- county_data %>%
   filter((county == "Cook"& state == "Illinois") |
@@ -67,12 +67,12 @@ synthetic_text <- synthetic %>%
 
 death_points <- death_data %>%
   group_by(county) %>%
-  filter(deaths == max(deaths)) %>%
+  filter(n == max(n)) %>%
   ungroup()
 
 p_00_county <- death_data %>%
   ggplot(aes(x = n, y = deaths)) +
-  geom_line(data = synthetic, aes(group = days_to_double), alpha = 0.9) + # synthetic
+  geom_line(data = synthetic, aes(group = days_to_double), alpha = 0.9, linetype = "dashed") + # synthetic
   geom_text(data = synthetic_text, aes(x = x, y = y, label = text), inherit.aes = FALSE, nudge_x = -0.5, size = 5) +
   geom_line(aes(color = county)) +
   geom_point(data = death_points, aes(color = county)) +
@@ -111,12 +111,12 @@ synthetic_text <- synthetic %>%
 
 cases_points <- cases_data %>%
   group_by(county) %>%
-  filter(cases == max(cases)) %>%
+  filter(n == max(n)) %>%
   ungroup()  
     
 p_01_county <- cases_data %>%
   ggplot(aes(x = n, y = cases)) +
-  geom_line(data = synthetic, aes(group = days_to_double), alpha = 0.9) + # synthetic
+  geom_line(data = synthetic, aes(group = days_to_double), alpha = 0.9, linetype = "dashed") + # synthetic
   geom_text(data = synthetic_text, aes(x = x, y = y, label = text), inherit.aes = FALSE, nudge_x = -0.5, size = 5) +
   geom_line(aes(color = county)) +
   geom_point(data = cases_points, aes(color = county)) +
