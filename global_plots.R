@@ -127,7 +127,7 @@ country_model_data <- countries_data %>%
   filter(confirmed != 0) %>%
   group_by(country) %>%
   mutate(n = 1:n()) %>%
-  filter(n >= last(n) -7) %>%
+  filter(n >= last(n) - 6) %>%
   mutate(n = seq(0, (n() - 1))) %>%
   ungroup() %>%
   select(country, n, confirmed.log, confirmed)

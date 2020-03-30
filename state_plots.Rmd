@@ -225,7 +225,7 @@ state_model_data <- state_data %>%
   filter(confirmed != 0) %>%
   select(state, n, confirmed.log, confirmed) %>%
   group_by(state) %>%
-  filter(n >= last(n) -7) %>%
+  filter(n >= last(n) - 6) %>%
   mutate(n = seq(0, (n() - 1))) %>%
   ungroup()
 ```
