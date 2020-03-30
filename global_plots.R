@@ -18,7 +18,7 @@ theme_set(theme_ft_rc(plot_title_size = 24,
 
 
 ## ------------------------------------------------------------------------
-global_data <- read_csv("./scripts/data/global_data.csv") %>%
+global_data <- read_csv("./data/global_data.csv") %>%
   mutate(country = case_when(country == "Korea, South" ~ "S Korea",
                              country == "United Kingdom" ~ "UK",
                              TRUE ~ country))

@@ -27,7 +27,7 @@ theme_set(theme_ft_rc(plot_title_size = 24,
 ```
 
 ```{r}
-state_data <- read_csv("./scripts/data/state_data.csv") %>%
+state_data <- read_csv("./data/state_data.csv") %>%
   group_by(state) %>%
   mutate(n = 0:(n() - 1)) %>%
   ungroup()

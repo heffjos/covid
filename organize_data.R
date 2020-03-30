@@ -77,7 +77,7 @@ read_data <- function(fname) {
 
 
 ## ------------------------------------------------------------------------
-data_dir <- "../COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/"
+data_dir <- "./COVID-19/csse_covid_19_data/csse_covid_19_daily_reports/"
 
 data <- tibble(reports = dir(data_dir, ".*\\.csv", full.names = TRUE))
 
@@ -113,13 +113,13 @@ read_global_data <- function(fname) {
 }
 
 
-global_confirmed <- read_global_data("../COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv") %>%
+global_confirmed <- read_global_data("./COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv") %>%
   rename(confirmed = value)
 
-global_recovered <- read_global_data("../COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv") %>%
+global_recovered <- read_global_data("./COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv") %>%
   rename(recovered = value)
 
-global_deaths <- read_global_data("../COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv") %>%
+global_deaths <- read_global_data("./COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv") %>%
   rename(deaths = value)
 
 global_data <- global_confirmed %>%
